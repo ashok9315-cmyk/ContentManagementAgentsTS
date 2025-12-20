@@ -41,10 +41,8 @@ coverage/
 # Optional eslint cache
 .eslintcache
 
-# Output files (generated content)
+# Output files (generated content only)
 output/
-*.md
-*.html
 
 # Temporary files
 tmp/
