@@ -1,0 +1,41 @@
+{
+  "name": "content-management-agents-ts",
+  "version": "1.0.0",
+  "description": "Multi-agent content management system using LangChain.js and LangGraph.js",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts",
+    "demo": "tsx src/index.ts --demo",
+    "demo-html": "tsx src/demoHTMLPublisher.ts",
+    "langgraph": "tsx src/workflows/langgraphWorkflow.ts",
+    "enhanced": "tsx src/workflows/enhancedWorkflow.ts",
+    "html": "tsx src/convertToHTML.ts",
+    "clean": "rimraf dist"
+  },
+  "keywords": [
+    "langchain",
+    "langgraph",
+    "ai-agents",
+    "content-management",
+    "typescript"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@langchain/core": "^0.2.0",
+    "@langchain/openai": "^0.2.0",
+    "@langchain/langgraph": "^0.0.34",
+    "langchain": "^0.2.0",
+    "dotenv": "^16.4.1",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.5",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3",
+    "rimraf": "^5.0.5"
+  }
+}
