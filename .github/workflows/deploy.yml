@@ -64,6 +64,18 @@ jobs:
         run: |
           chmod +x build-lambda.sh
           ./build-lambda.sh
+          
+      - name: Verify build output
+        run: |
+          echo "Checking build outputs..."
+          ls -la
+          if [ -d "lambda-build" ]; then
+            echo "✓ lambda-build directory created"
+            ls -la lambda-build/
+          else
+            echo "✗ lambda-build directory not found after build!"
+            exit 1
+          fi
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
