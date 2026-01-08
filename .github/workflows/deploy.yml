@@ -1,0 +1,74 @@
+name: Deploy to AWS
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch: # Allow manual trigger
+
+env:
+  AWS_REGION: us-east-1
+  NODE_VERSION: '20.x'
+
+jobs:
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build TypeScript
+        run: npm run build
+
+      - name: Build Lambda package
+        run: |
+          chmod +x build-lambda.sh
+          ./build-lambda.sh
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Install AWS CDK
+        run: npm install -g aws-cdk
+
+      - name: Deploy with CDK
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: cdk deploy --require-approval never
+
+      - name: Invalidate CloudFront cache
+        run: |
+          DISTRIBUTION_ID=$(aws cloudformation describe-stacks \
+            --stack-name ContentStudioStack \
+            --query "Stacks[0].Outputs[?OutputKey=='CloudFrontDistributionId'].OutputValue" \
+            --output text)
+          aws cloudfront create-invalidation \
+            --distribution-id $DISTRIBUTION_ID \
+            --paths "/*"
+
+      - name: Deployment summary
+        run: |
+          echo "### Deployment Successful! 🚀" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Website URL:** https://ai-content-studio.solutionsynth.cloud" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          API_ENDPOINT=$(aws cloudformation describe-stacks \
+            --stack-name ContentStudioStack \
+            --query "Stacks[0].Outputs[?OutputKey=='ApiEndpoint'].OutputValue" \
+            --output text)
+          echo "**API Endpoint:** $API_ENDPOINT" >> $GITHUB_STEP_SUMMARY
