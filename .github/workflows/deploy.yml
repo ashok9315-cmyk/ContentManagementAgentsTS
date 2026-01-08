@@ -161,9 +161,16 @@ jobs:
             --stack-name ContentStudioStack-Staging \
             --query "Stacks[0].Outputs[?OutputKey=='CloudFrontDistributionId'].OutputValue" \
             --output text)
-          aws cloudfront create-invalidation \
-            --distribution-id $DISTRIBUTION_ID \
-            --paths "/*"
+          if [ -z "$DISTRIBUTION_ID" ] || [ "$DISTRIBUTION_ID" = "None" ]; then
+            echo "⚠️ CloudFront Distribution ID not found. Skipping cache invalidation."
+            echo "Deploy the stack first to create the output, then run the workflow again."
+          else
+            echo "🔄 Invalidating CloudFront cache for distribution: $DISTRIBUTION_ID"
+            aws cloudfront create-invalidation \
+              --distribution-id $DISTRIBUTION_ID \
+              --paths "/*"
+            echo "✅ Cache invalidation initiated"
+          fi
 
       - name: Staging deployment summary
         run: |
@@ -248,9 +255,16 @@ jobs:
             --stack-name ContentStudioStack \
             --query "Stacks[0].Outputs[?OutputKey=='CloudFrontDistributionId'].OutputValue" \
             --output text)
-          aws cloudfront create-invalidation \
-            --distribution-id $DISTRIBUTION_ID \
-            --paths "/*"
+          if [ -z "$DISTRIBUTION_ID" ] || [ "$DISTRIBUTION_ID" = "None" ]; then
+            echo "⚠️ CloudFront Distribution ID not found. Skipping cache invalidation."
+            echo "Deploy the stack first to create the output, then run the workflow again."
+          else
+            echo "🔄 Invalidating CloudFront cache for distribution: $DISTRIBUTION_ID"
+            aws cloudfront create-invalidation \
+              --distribution-id $DISTRIBUTION_ID \
+              --paths "/*"
+            echo "✅ Cache invalidation initiated"
+          fi
 
       - name: Production deployment summary
         run: |

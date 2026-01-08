@@ -232,6 +232,12 @@ export class ContentStudioStack extends cdk.Stack {
       exportName: `${this.stackName}-CloudFrontURL`,
     });
 
+    new cdk.CfnOutput(this, 'CloudFrontDistributionId', {
+      value: distribution.distributionId,
+      description: 'CloudFront Distribution ID',
+      exportName: `${this.stackName}-DistributionId`,
+    });
+
     new cdk.CfnOutput(this, 'LambdaFunctionArn', {
       value: workflowFunction.functionArn,
       description: 'Lambda Function ARN',
