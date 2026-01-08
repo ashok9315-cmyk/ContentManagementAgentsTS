@@ -62,8 +62,34 @@ jobs:
 
       - name: Build Lambda package
         run: |
-          chmod +x build-lambda.sh
-          ./build-lambda.sh
+          echo "🔨 Building Lambda package for CDK..."
+          
+          # Clean previous build
+          rm -rf lambda-build dist
+          
+          # Build TypeScript
+          echo "📦 Compiling TypeScript..."
+          npm run build
+          
+          # Create lambda-build directory
+          mkdir -p lambda-build
+          
+          # Copy dist to lambda-build
+          cp -r dist/* lambda-build/
+          
+          # Copy package.json and modify for ES modules
+          cp package.json lambda-build/
+          cd lambda-build
+          
+          # Add "type": "module" to package.json for ES modules
+          echo "$(jq '. + {"type": "module"}' package.json)" > package.json
+          
+          # Install production dependencies
+          echo "📥 Installing production dependencies..."
+          npm install --production --omit=dev
+          
+          cd ..
+          echo "✅ Lambda build complete!"
           
       - name: Verify build output
         run: |
@@ -71,7 +97,7 @@ jobs:
           ls -la
           if [ -d "lambda-build" ]; then
             echo "✓ lambda-build directory created"
-            ls -la lambda-build/
+            ls -la lambda-build/ | head -20
           else
             echo "✗ lambda-build directory not found after build!"
             exit 1
