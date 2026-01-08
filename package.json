@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
+    "build:lambda": "tsc && cd dist && zip -r ../lambda.zip .",
     "start": "node dist/server.js",
     "dev": "tsx src/index.ts",
     "demo": "tsx src/index.ts --demo",
@@ -16,6 +17,7 @@
     "clean": "rimraf dist",
     "server": "tsx src/server.ts",
     "dev:ui": "tsx src/server.ts",
+    "deploy:serverless": "sam build && sam deploy --guided",
     "postinstall": "npm run build"
   },
   "keywords": [
@@ -29,13 +31,9 @@
   "license": "MIT",
   "dependencies": {
     "@langchain/core": "^0.2.0",
-    "@langchain/langgraph": "^0.0.34",
-    "@langchain/openai": "^0.2.0",
-    "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.6",
-    "cors": "^2.8.5",
+    "@langchaws-lambda": "^8.10.145",
     "dotenv": "^16.4.1",
-    "express": "^5.2.1",
+    "langchain": "^0.2.0
     "langchain": "^0.2.0",
     "socket.io": "^4.8.3",
     "zod": "^3.22.4"

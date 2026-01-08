@@ -1,0 +1,146 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: AI Content Studio - Serverless Architecture (Lambda + API Gateway + S3)
+
+Globals:
+  Function:
+    Timeout: 300  # 5 minutes for content generation
+    MemorySize: 1024
+    Runtime: nodejs20.x
+    Environment:
+      Variables:
+        NODE_ENV: production
+        OPENAI_API_KEY: !Ref OpenAIAPIKey
+
+Parameters:
+  OpenAIAPIKey:
+    Type: String
+    Description: OpenAI API Key
+    NoEcho: true
+  
+  Environment:
+    Type: String
+    Default: prod
+    AllowedValues:
+      - dev
+      - prod
+    Description: Environment name
+
+Resources:
+  # Lambda Function for Content Workflow
+  WorkflowFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub 'ai-content-studio-${Environment}'
+      CodeUri: ./dist/lambda
+      Handler: workflow.handler
+      Description: AI Content Generation Workflow with SSE
+      Architectures:
+        - x86_64
+      Events:
+        HealthCheck:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ContentAPI
+            Path: /health
+            Method: GET
+        WorkflowPost:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ContentAPI
+            Path: /api/workflow
+            Method: POST
+        WorkflowOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ContentAPI
+            Path: /api/workflow
+            Method: OPTIONS
+      Tags:
+        Application: AIContentStudio
+        Environment: !Ref Environment
+
+  # API Gateway
+  ContentAPI:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub 'ai-content-studio-api-${Environment}'
+      StageName: !Ref Environment
+      Cors:
+        AllowMethods: "'GET,POST,OPTIONS'"
+        AllowHeaders: "'Content-Type,Authorization'"
+        AllowOrigin: "'*'"
+      TracingEnabled: true
+      MethodSettings:
+        - ResourcePath: '/*'
+          HttpMethod: '*'
+          ThrottlingBurstLimit: 100
+          ThrottlingRateLimit: 50
+
+  # S3 Bucket for Static Website
+  WebsiteBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub 'ai-content-studio-${Environment}-${AWS::AccountId}'
+      WebsiteConfiguration:
+        IndexDocument: index-serverless.html
+        ErrorDocument: error.html
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+      Tags:
+        - Key: Application
+          Value: AIContentStudio
+        - Key: Environment
+          Value: !Ref Environment
+
+  # S3 Bucket Policy for Public Read
+  WebsiteBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref WebsiteBucket
+      PolicyDocument:
+        Statement:
+          - Sid: PublicReadGetObject
+            Effect: Allow
+            Principal: '*'
+            Action: 's3:GetObject'
+            Resource: !Sub '${WebsiteBucket.Arn}/*'
+
+  # CloudWatch Log Group for Lambda
+  WorkflowFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/ai-content-studio-${Environment}'
+      RetentionInDays: 7
+
+Outputs:
+  ApiEndpoint:
+    Description: API Gateway endpoint URL
+    Value: !Sub 'https://${ContentAPI}.execute-api.${AWS::Region}.amazonaws.com/${Environment}'
+    Export:
+      Name: !Sub '${AWS::StackName}-ApiEndpoint'
+
+  WebsiteURL:
+    Description: S3 Website URL
+    Value: !GetAtt WebsiteBucket.WebsiteURL
+    Export:
+      Name: !Sub '${AWS::StackName}-WebsiteURL'
+
+  WorkflowFunctionArn:
+    Description: Lambda Function ARN
+    Value: !GetAtt WorkflowFunction.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-FunctionArn'
+
+  S3BucketName:
+    Description: S3 Bucket Name
+    Value: !Ref WebsiteBucket
+    Export:
+      Name: !Sub '${AWS::StackName}-BucketName'
+
+  EstimatedMonthlyCost:
+    Description: Estimated monthly cost (USD)
+    Value: "$1-5 for low traffic (Lambda + S3 + API Gateway)"

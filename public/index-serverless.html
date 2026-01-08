@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Content Studio - Serverless Edition</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">🚀</div>
+                <div class="logo-text">
+                    <h1>AI Content Studio</h1>
+                    <p>Serverless Edition - Lambda + S3</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <h2>Transform Ideas into<br>Professional Content</h2>
+        <p class="hero-subtitle">
+            Powered by AWS Lambda & advanced AI agents - Real-time updates via Server-Sent Events
+        </p>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <span class="stat-number">6</span>
+                <span class="stat-label">AI Agents</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number">30s</span>
+                <span class="stat-label">Avg. Generation</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number">$0-5</span>
+                <span class="stat-label">Monthly Cost</span>
+            </div>
+        </div>
+    </section>
+
+    <div class="container">
+        <div class="control-panel">
+            <div class="control-header">
+                <h3 class="control-title">Create New Content</h3>
+            </div>
+            <div class="input-group">
+                <input 
+                    type="text" 
+                    id="topicInput" 
+                    placeholder="Enter your content topic (e.g., 'The Future of Sustainable Energy')"
+                    autocomplete="off"
+                />
+                <button id="startBtn">Generate Content</button>
+            </div>
+            <div id="statusMessage" class="status-message"></div>
+        </div>
+
+        <!-- AI Agents Section -->
+        <div class="agents-section">
+            <h2 class="section-title">AI Agents Working For You</h2>
+            <div class="agents-grid">
+                <div class="agent-card" data-agent="research">
+                    <div class="agent-header">
+                        <div class="agent-icon">🔍</div>
+                        <div class="agent-info">
+                            <h3>Research Agent</h3>
+                            <div class="agent-status">
+                                <span class="status-indicator"></span>
+                                <span class="status-text">Idle</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                    <div class="agent-output">Waiting to start...</div>
+                </div>
+
+                <div class="agent-card" data-agent="writer">
+                    <div class="agent-header">
+                        <div class="agent-icon">✍️</div>
+                        <div class="agent-info">
+                            <h3>Writer Agent</h3>
+                            <div class="agent-status">
+                                <span class="status-indicator"></span>
+                                <span class="status-text">Idle</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                    <div class="agent-output">Waiting to start...</div>
+                </div>
+
+                <div class="agent-card" data-agent="editor">
+                    <div class="agent-header">
+                        <div class="agent-icon">📝</div>
+                        <div class="agent-info">
+                            <h3>Editor Agent</h3>
+                            <div class="agent-status">
+                                <span class="status-indicator"></span>
+                                <span class="status-text">Idle</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                    <div class="agent-output">Waiting to start...</div>
+                </div>
+
+                <div class="agent-card" data-agent="seo">
+                    <div class="agent-header">
+                        <div class="agent-icon">🔎</div>
+                        <div class="agent-info">
+                            <h3>SEO Agent</h3>
+                            <div class="agent-status">
+                                <span class="status-indicator"></span>
+                                <span class="status-text">Idle</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                    <div class="agent-output">Waiting to start...</div>
+                </div>
+
+                <div class="agent-card" data-agent="publisher">
+                    <div class="agent-header">
+                        <div class="agent-icon">📤</div>
+                        <div class="agent-info">
+                            <h3>Publisher Agent</h3>
+                            <div class="agent-status">
+                                <span class="status-indicator"></span>
+                                <span class="status-text">Idle</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                    <div class="agent-output">Waiting to start...</div>
+                </div>
+
+                <div class="agent-card" data-agent="html">
+                    <div class="agent-header">
+                        <div class="agent-icon">🌐</div>
+                        <div class="agent-info">
+                            <h3>HTML Publisher</h3>
+                            <div class="agent-status">
+                                <span class="status-indicator"></span>
+                                <span class="status-text">Idle</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                    <div class="agent-output">Ready to assist</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Output Section -->
+        <div class="output-section">
+            <h2>📄 Generated Content</h2>
+            <div class="output-tabs">
+                <button class="tab-btn active" data-tab="markdown">Markdown</button>
+                <button class="tab-btn" data-tab="html">HTML Preview</button>
+            </div>
+            <div class="tab-content active" id="markdown-content">
+                <div class="output-content">No content generated yet. Click "Generate Content" to begin...</div>
+            </div>
+            <div class="tab-content" id="html-content">
+                <div class="output-content">No HTML content available yet...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>Powered by AWS Lambda + Server-Sent Events</p>
+        <p>© 2026 AI Content Studio - Serverless Edition</p>
+    </footer>
+
+    <script>
+        // Configuration
+        const API_ENDPOINT = window.location.hostname === 'localhost' 
+            ? 'http://localhost:3000' 
+            : 'https://YOUR_API_GATEWAY_URL';
+
+        const topicInput = document.getElementById('topicInput');
+        const startBtn = document.getElementById('startBtn');
+        const statusMessage = document.getElementById('statusMessage');
+
+        let workflowRunning = false;
+        let eventSource = null;
+
+        // Tab switching
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                btn.classList.add('active');
+                const tabId = btn.dataset.tab + '-content';
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+
+        function showStatus(message, type = 'info') {
+            statusMessage.textContent = message;
+            statusMessage.className = `status-message ${type}`;
+            statusMessage.style.display = 'block';
+        }
+
+        function updateAgentStatus(agentName, status, output = null) {
+            const card = document.querySelector(`[data-agent="${agentName}"]`);
+            if (!card) return;
+
+            const indicator = card.querySelector('.status-indicator');
+            const statusText = card.querySelector('.status-text');
+            const progressFill = card.querySelector('.progress-fill');
+            const outputDiv = card.querySelector('.agent-output');
+
+            indicator.className = `status-indicator ${status}`;
+            
+            switch(status) {
+                case 'pending':
+                    statusText.innerHTML = '<span class="spinner"></span> Starting...';
+                    progressFill.style.width = '10%';
+                    break;
+                case 'active':
+                    statusText.innerHTML = '<span class="spinner"></span> Working...';
+                    progressFill.style.width = '50%';
+                    break;
+                case 'completed':
+                    statusText.textContent = 'Completed ✓';
+                    progressFill.style.width = '100%';
+                    break;
+            }
+
+            if (output) {
+                outputDiv.textContent = output;
+            }
+        }
+
+        function resetAgents() {
+            document.querySelectorAll('.agent-card').forEach(card => {
+                const indicator = card.querySelector('.status-indicator');
+                const statusText = card.querySelector('.status-text');
+                const progressFill = card.querySelector('.progress-fill');
+                const outputDiv = card.querySelector('.agent-output');
+
+                indicator.className = 'status-indicator';
+                statusText.textContent = 'Idle';
+                progressFill.style.width = '0%';
+                outputDiv.textContent = 'Ready to assist';
+            });
+        }
+
+        // Handle Server-Sent Events (SSE)
+        function startSSEWorkflow(topic) {
+            resetAgents();
+            showStatus('🚀 Connecting to Lambda function...', 'info');
+
+            // Close existing connection
+            if (eventSource) {
+                eventSource.close();
+            }
+
+            // Create SSE connection via POST request
+            fetch(`${API_ENDPOINT}/api/workflow`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ topic }),
+            })
+            .then(async response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+
+                showStatus('📡 Receiving real-time updates...', 'info');
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    
+                    if (done) {
+                        console.log('Stream complete');
+                        break;
+                    }
+
+                    // Decode and process SSE messages
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\n');
+
+                    for (const line of lines) {
+                        if (line.startsWith('event:')) {
+                            const eventType = line.substring(7).trim();
+                            continue;
+                        }
+                        
+                        if (line.startsWith('data:')) {
+                            try {
+                                const data = JSON.parse(line.substring(5));
+                                handleSSEMessage(eventType || 'message', data);
+                            } catch (e) {
+                                console.error('Failed to parse SSE data:', e);
+                            }
+                        }
+                    }
+                }
+
+                workflowRunning = false;
+                startBtn.disabled = false;
+            })
+            .catch(error => {
+                console.error('SSE Error:', error);
+                showStatus('❌ Error: ' + error.message, 'error');
+                workflowRunning = false;
+                startBtn.disabled = false;
+            });
+        }
+
+        let currentEventType = 'message';
+
+        function handleSSEMessage(eventType, data) {
+            console.log(`SSE Event: ${eventType}`, data);
+
+            switch(eventType) {
+                case 'status-update':
+                    showStatus(`📊 ${data.message}`, 'info');
+                    break;
+
+                case 'agent-progress':
+                    const agentName = data.agent?.toLowerCase();
+                    if (agentName) {
+                        updateAgentStatus(agentName, data.status, data.output);
+                    }
+                    break;
+
+                case 'workflow-complete':
+                    showStatus('✅ Content generation completed!', 'success');
+                    
+                    // Display markdown
+                    if (data.markdown) {
+                        document.querySelector('#markdown-content .output-content').textContent = data.markdown;
+                    }
+
+                    // Display HTML
+                    if (data.html) {
+                        const htmlDiv = document.querySelector('#html-content .output-content');
+                        const iframe = document.createElement('iframe');
+                        iframe.style.width = '100%';
+                        iframe.style.minHeight = '500px';
+                        iframe.style.border = 'none';
+                        iframe.style.borderRadius = '8px';
+                        
+                        htmlDiv.innerHTML = '';
+                        htmlDiv.appendChild(iframe);
+                        
+                        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                        iframeDoc.open();
+                        iframeDoc.write(data.html);
+                        iframeDoc.close();
+                    }
+
+                    updateAgentStatus('html', 'completed', 'Published successfully!');
+                    break;
+
+                case 'error':
+                    showStatus(`❌ Error: ${data.message}`, 'error');
+                    break;
+
+                case 'done':
+                    console.log('Stream closed');
+                    workflowRunning = false;
+                    startBtn.disabled = false;
+                    break;
+            }
+        }
+
+        // Start button handler
+        startBtn.addEventListener('click', () => {
+            const topic = topicInput.value.trim();
+            
+            if (!topic) {
+                showStatus('Please enter a topic!', 'error');
+                return;
+            }
+
+            if (workflowRunning) {
+                showStatus('A workflow is already running!', 'error');
+                return;
+            }
+
+            workflowRunning = true;
+            startBtn.disabled = true;
+            
+            startSSEWorkflow(topic);
+        });
+
+        // Allow Enter key to start workflow
+        topicInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !workflowRunning) {
+                startBtn.click();
+            }
+        });
+    </script>
+</body>
+</html>

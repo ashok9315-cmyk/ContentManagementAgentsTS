@@ -1,0 +1,20 @@
+# SAM Configuration for AWS Deployment
+version = 0.1
+
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "ai-content-studio-serverless"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket"
+s3_prefix = "ai-content-studio"
+region = "us-east-1"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "Environment=prod"
+confirm_changeset = true
+resolve_s3 = true
+
+[default.build]
+[default.build.parameters]
+use_container = false
+cached = true
+parallel = true
