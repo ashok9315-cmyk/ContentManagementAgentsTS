@@ -13,7 +13,9 @@
     "langgraph": "tsx src/workflows/langgraphWorkflow.ts",
     "enhanced": "tsx src/workflows/enhancedWorkflow.ts",
     "html": "tsx src/convertToHTML.ts",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist",
+    "server": "tsx src/server.ts",
+    "dev:ui": "tsx src/server.ts"
   },
   "keywords": [
     "langchain",
@@ -26,16 +28,21 @@
   "license": "MIT",
   "dependencies": {
     "@langchain/core": "^0.2.0",
-    "@langchain/openai": "^0.2.0",
     "@langchain/langgraph": "^0.0.34",
-    "langchain": "^0.2.0",
+    "@langchain/openai": "^0.2.0",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "cors": "^2.8.5",
     "dotenv": "^16.4.1",
+    "express": "^5.2.1",
+    "langchain": "^0.2.0",
+    "socket.io": "^4.8.3",
     "zod": "^3.22.4"
   },
   "devDependencies": {
     "@types/node": "^20.11.5",
+    "rimraf": "^5.0.5",
     "tsx": "^4.7.0",
-    "typescript": "^5.3.3",
-    "rimraf": "^5.0.5"
+    "typescript": "^5.3.3"
   }
 }

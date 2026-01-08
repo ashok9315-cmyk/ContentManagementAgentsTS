@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Content Studio - Intelligent Publishing Platform</title>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --secondary: #8b5cf6;
+            --accent: #ec4899;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --gray: #64748b;
+            --border: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            min-height: 100vh;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        /* Header */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        .logo-text h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo-text p {
+            font-size: 0.75rem;
+            color: var(--gray);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--dark);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+            font-size: 0.95rem;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        /* Hero Section */
+        .hero {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 4rem 2rem 3rem;
+            text-align: center;
+        }
+
+        .hero h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 3.5rem;
+            font-weight: 900;
+            color: white;
+            margin-bottom: 1.5rem;
+            text-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            line-height: 1.2;
+        }
+
+        .hero-subtitle {
+            font-size: 1.25rem;
+            color: rgba(255, 255, 255, 0.95);
+            margin-bottom: 3rem;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            font-weight: 400;
+        }
+
+        /* Stats */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            max-width: 900px;
+            margin: 0 auto 3rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 1.5rem;
+            border-radius: 16px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: white;
+            display: block;
+        }
+
+        .stat-label {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Control Panel */
+        .control-panel {
+            background: white;
+            border-radius: 24px;
+            padding: 2.5rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            margin-bottom: 2rem;
+        }
+
+        .control-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .control-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        .mode-toggle {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 16px;
+            background: var(--light);
+            border-radius: 12px;
+        }
+
+        .mode-toggle label {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--gray);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 56px;
+            height: 28px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--border);
+            transition: .4s;
+            border-radius: 28px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 3px;
+            bottom: 3px;
+            background: white;
+            transition: .4s;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        input:checked + .slider {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(28px);
+        }
+
+        #modeLabel {
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .input-group {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        #topicInput {
+            flex: 1;
+            padding: 1rem 1.5rem;
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            font-size: 1rem;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        #topicInput:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        }
+
+        #topicInput::placeholder {
+            color: var(--gray);
+        }
+
+        #startBtn {
+            padding: 1rem 3rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-size: 1.05rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 24px rgba(37, 99, 235, 0.3);
+            font-family: 'Inter', sans-serif;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        #startBtn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(37, 99, 235, 0.4);
+        }
+
+        #startBtn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status-message {
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            display: none;
+            font-weight: 500;
+            animation: slideIn 0.3s ease;
+        }
+
+        .status-message.info {
+            background: #dbeafe;
+            color: #1e40af;
+            border-left: 4px solid var(--primary);
+        }
+
+        .status-message.success {
+            background: #d1fae5;
+            color: #065f46;
+            border-left: 4px solid var(--success);
+        }
+
+        .status-message.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border-left: 4px solid var(--danger);
+        }
+
+        /* Agents Grid */
+        .agents-section {
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .agents-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .agent-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .agent-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+            border-color: var(--primary);
+        }
+
+        .agent-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.25rem;
+        }
+
+        .agent-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            margin-right: 1rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.25);
+        }
+
+        .agent-info h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.35rem;
+            color: var(--dark);
+        }
+
+        .agent-status {
+            font-size: 0.9rem;
+            color: var(--gray);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--border);
+            transition: all 0.3s ease;
+        }
+
+        .status-indicator.pending {
+            background: var(--warning);
+            animation: pulse 1.5s infinite;
+        }
+
+        .status-indicator.active {
+            background: var(--success);
+            animation: pulse 1.5s infinite;
+        }
+
+        .status-indicator.completed {
+            background: var(--primary);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: var(--light);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            width: 0%;
+            transition: width 0.5s ease;
+            border-radius: 10px;
+        }
+
+        .agent-output {
+            background: var(--light);
+            border-radius: 12px;
+            padding: 1rem;
+            font-size: 0.9rem;
+            color: var(--gray);
+            max-height: 120px;
+            overflow-y: auto;
+            line-height: 1.6;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Output Section */
+        .output-section {
+            background: white;
+            border-radius: 24px;
+            padding: 2.5rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+        }
+
+        .output-section h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            color: var(--dark);
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .output-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 8px;
+        }
+
+        .tab-btn {
+            padding: 0.75rem 1.5rem;
+            background: transparent;
+            border: none;
+            border-radius: 12px 12px 0 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--gray);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .tab-btn:hover {
+            background: var(--light);
+            color: var(--dark);
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .output-content {
+            background: var(--light);
+            border-radius: 16px;
+            padding: 2rem;
+            min-height: 300px;
+            max-height: 600px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.8;
+            white-space: pre-wrap;
+            border: 1px solid var(--border);
+        }
+
+        #html-content .output-content {
+            background: white;
+            font-family: 'Inter', sans-serif;
+            white-space: normal;
+        }
+
+        #html-content .output-content iframe {
+            width: 100%;
+            min-height: 500px;
+            border: none;
+            border-radius: 12px;
+        }
+
+        .copy-btn {
+            padding: 0.75rem 1.5rem;
+            background: var(--success);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .copy-btn:hover {
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: rgba(255, 255, 255, 0.9);
+            margin-top: 3rem;
+        }
+
+        .footer p {
+            font-size: 0.95rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .footer a {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.6;
+                transform: scale(1.1);
+            }
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h2 {
+                font-size: 2.5rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1.1rem;
+            }
+
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .control-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+
+            #startBtn {
+                width: 100%;
+            }
+
+            .agents-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-links {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">🚀</div>
+                <div class="logo-text">
+                    <h1>AI Content Studio</h1>
+                    <p>Intelligent Publishing Platform</p>
+                </div>
+            </div>
+            <nav class="nav-links">
+                <a href="#create">Create</a>
+                <a href="#agents">AI Agents</a>
+                <a href="#docs">API Docs</a>
+                <a href="#about">About</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <h2>Transform Ideas into<br>Professional Content</h2>
+        <p class="hero-subtitle">
+            Powered by advanced AI agents working together to research, write, edit, optimize, and publish 
+            exceptional content in seconds
+        </p>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <span class="stat-number">6</span>
+                <span class="stat-label">AI Agents</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number">30s</span>
+                <span class="stat-label">Avg. Generation</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number">SEO</span>
+                <span class="stat-label">Optimized</span>
+            </div>
+        </div>
+    </section>
+
+    <div class="container">
+
+        <div class="control-panel">
+            <div class="control-header">
+                <h3 class="control-title">Create New Content</h3>
+                <div class="mode-toggle">
+                    <label>Mode</label>
+                    <span id="modeLabel">Real-time</span>
+                    <label class="switch">
+                        <input type="checkbox" id="apiModeToggle">
+                        <span class="slider"></span>
+                    </label>
+                    <span>API Response</span>
+                </div>
+            </div>
+            <div class="input-group">
+                <input 
+                    type="text" 
+                    id="topicInput" 
+                    placeholder="Enter your content topic (e.g., 'The Future of Sustainable Energy')"
+                    autocomplete="off"
+                />
+                <button id="startBtn">Generate Content</button>
+            </div>
+            <div id="statusMessage" class="status-message"></div>
+        </div>
+
+        <!-- AI Agents Section -->
+        <div class="agents-section">
+            <h2 class="section-title">AI Agents Working For You</h2>
+            <div class="agents-grid">
+            <div class="agent-card" data-agent="research">
+                <div class="agent-header">
+                    <div class="agent-icon">🔍</div>
+                    <div class="agent-info">
+                        <h3>Research Agent</h3>
+                        <div class="agent-status">
+                            <span class="status-indicator"></span>
+                            <span class="status-text">Idle</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
+                <div class="agent-output">Waiting to start...</div>
+            </div>
+
+            <div class="agent-card" data-agent="writer">
+                <div class="agent-header">
+                    <div class="agent-icon">✍️</div>
+                    <div class="agent-info">
+                        <h3>Writer Agent</h3>
+                        <div class="agent-status">
+                            <span class="status-indicator"></span>
+                            <span class="status-text">Idle</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
+                <div class="agent-output">Waiting to start...</div>
+            </div>
+
+            <div class="agent-card" data-agent="editor">
+                <div class="agent-header">
+                    <div class="agent-icon">📝</div>
+                    <div class="agent-info">
+                        <h3>Editor Agent</h3>
+                        <div class="agent-status">
+                            <span class="status-indicator"></span>
+                            <span class="status-text">Idle</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
+                <div class="agent-output">Waiting to start...</div>
+            </div>
+
+            <div class="agent-card" data-agent="seo">
+                <div class="agent-header">
+                    <div class="agent-icon">🔎</div>
+                    <div class="agent-info">
+                        <h3>SEO Agent</h3>
+                        <div class="agent-status">
+                            <span class="status-indicator"></span>
+                            <span class="status-text">Idle</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
+                <div class="agent-output">Waiting to start...</div>
+            </div>
+
+            <div class="agent-card" data-agent="publisher">
+                <div class="agent-header">
+                    <div class="agent-icon">📤</div>
+                    <div class="agent-info">
+                        <h3>Publisher Agent</h3>
+                        <div class="agent-status">
+                            <span class="status-indicator"></span>
+                            <span class="status-text">Idle</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
+                <div class="agent-output">Waiting to start...</div>
+            </div>
+
+            <div class="agent-card" data-agent="html">
+                <div class="agent-header">
+                    <div class="agent-icon">🌐</div>
+                    <div class="agent-info">
+                        <h3>HTML Publisher</h3>
+                        <div class="agent-status">
+                            <span class="status-indicator"></span>
+                            <span class="status-text">Idle</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
+                <div class="agent-output">Ready to assist</div>
+            </div>
+        </div>
+
+        <!-- Output Section -->
+        <div class="output-section">
+            <h2>📄 Generated Content</h2>
+            <div class="output-tabs">
+                <button class="tab-btn active" data-tab="markdown">Markdown</button>
+                <button class="tab-btn" data-tab="html">HTML Preview</button>
+                <button class="tab-btn" data-tab="metadata">Metadata</button>
+                <button class="tab-btn" data-tab="api">API Response</button>
+            </div>
+            <div class="tab-content active" id="markdown-content">
+                <div class="output-content">No content generated yet. Click "Generate Content" to begin...</div>
+            </div>
+            <div class="tab-content" id="html-content">
+                <div class="output-content">No HTML content available yet...</div>
+            </div>
+            <div class="tab-content" id="metadata-content">
+                <div class="output-content">No metadata available yet...</div>
+            </div>
+            <div class="tab-content" id="api-content">
+                <button class="copy-btn" onclick="copyToClipboard('api-output')">📋 Copy JSON</button>
+                <div id="api-output" class="output-content">No API response yet...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>Powered by Advanced AI Multi-Agent System</p>
+        <p>© 2026 AI Content Studio. Built with OpenAI GPT-4 • <a href="/api-tester.html">API Tester</a> • <a href="https://github.com">GitHub</a></p>
+    </footer>
+
+    <script>
+        const socket = io('http://localhost:3000');
+        const topicInput = document.getElementById('topicInput');
+        const startBtn = document.getElementById('startBtn');
+        const statusMessage = document.getElementById('statusMessage');
+        const apiModeToggle = document.getElementById('apiModeToggle');
+        const modeLabel = document.getElementById('modeLabel');
+
+        let workflowRunning = false;
+        let showApiResponse = false;
+        let currentApiResponse = null;
+
+        // Mode toggle handler
+        apiModeToggle.addEventListener('change', (e) => {
+            showApiResponse = e.target.checked;
+            modeLabel.textContent = showApiResponse ? 'API Mode' : 'Real-time';
+        });
+
+        // Copy to clipboard function
+        function copyToClipboard(elementId) {
+            const element = document.getElementById(elementId);
+            const text = element.textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                showStatus('✅ Copied to clipboard!', 'success');
+                setTimeout(() => {
+                    statusMessage.style.display = 'none';
+                }, 2000);
+            }).catch(err => {
+                showStatus('❌ Failed to copy', 'error');
+            });
+        }
+
+        // Tab switching
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                btn.classList.add('active');
+                const tabId = btn.dataset.tab + '-content';
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+
+        function showStatus(message, type = 'info') {
+            statusMessage.textContent = message;
+            statusMessage.className = `status-message ${type}`;
+            statusMessage.style.display = 'block';
+        }
+
+        function updateAgentStatus(agentName, status, output = null) {
+            const card = document.querySelector(`[data-agent="${agentName}"]`);
+            if (!card) return;
+
+            const indicator = card.querySelector('.status-indicator');
+            const statusText = card.querySelector('.status-text');
+            const progressFill = card.querySelector('.progress-fill');
+            const outputDiv = card.querySelector('.agent-output');
+
+            indicator.className = `status-indicator ${status}`;
+            
+            switch(status) {
+                case 'pending':
+                    statusText.innerHTML = '<span class="spinner"></span> Starting...';
+                    progressFill.style.width = '10%';
+                    break;
+                case 'active':
+                    statusText.innerHTML = '<span class="spinner"></span> Working...';
+                    progressFill.style.width = '50%';
+                    break;
+                case 'completed':
+                    statusText.textContent = 'Completed ✓';
+                    progressFill.style.width = '100%';
+                    break;
+            }
+
+            if (output) {
+                outputDiv.textContent = output;
+            }
+        }
+
+        function resetAgents() {
+            document.querySelectorAll('.agent-card').forEach(card => {
+                const indicator = card.querySelector('.status-indicator');
+                const statusText = card.querySelector('.status-text');
+                const progressFill = card.querySelector('.progress-fill');
+                const outputDiv = card.querySelector('.agent-output');
+
+                indicator.className = 'status-indicator';
+                statusText.textContent = 'Idle';
+                progressFill.style.width = '0%';
+                outputDiv.textContent = 'Ready to assist';
+            });
+        }
+
+        startBtn.addEventListener('click', async () => {
+            const topic = topicInput.value.trim();
+            
+            if (!topic) {
+                showStatus('Please enter a topic!', 'error');
+                return;
+            }
+
+            if (workflowRunning) {
+                showStatus('A workflow is already running!', 'error');
+                return;
+            }
+
+            workflowRunning = true;
+            startBtn.disabled = true;
+            resetAgents();
+            showStatus('🚀 Initializing AI agents...', 'info');
+
+            if (showApiResponse) {
+                // Use API mode - direct REST call
+                await generateContentViaAPI(topic);
+            } else {
+                // Use WebSocket mode - real-time updates
+                socket.emit('start-workflow', { topic });
+            }
+        });
+
+        // API-based content generation
+        async function generateContentViaAPI(topic) {
+            try {
+                showStatus('📡 Calling API endpoint...', 'info');
+                
+                const response = await fetch('http://localhost:3000/api/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        topic: topic,
+                        saveToFile: false
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                currentApiResponse = data;
+
+                if (data.success) {
+                    showStatus('✅ Content generated successfully via API!', 'success');
+                    displayAPIResults(data);
+                } else {
+                    showStatus('❌ API Error: ' + data.error, 'error');
+                }
+
+            } catch (error) {
+                showStatus('❌ Network error: ' + error.message, 'error');
+                console.error('API Error:', error);
+            } finally {
+                workflowRunning = false;
+                startBtn.disabled = false;
+            }
+        }
+
+        // Display API results
+        function displayAPIResults(data) {
+            // Display markdown content
+            if (data.markdown && data.markdown.content) {
+                document.querySelector('#markdown-content .output-content').textContent = 
+                    data.markdown.content;
+            }
+
+            // Display HTML content
+            const htmlContentDiv = document.querySelector('#html-content .output-content');
+            if (data.html && data.html.content) {
+                const iframe = document.createElement('iframe');
+                iframe.style.width = '100%';
+                iframe.style.minHeight = '500px';
+                iframe.style.border = 'none';
+                iframe.style.borderRadius = '8px';
+                iframe.style.background = 'white';
+                
+                htmlContentDiv.innerHTML = '';
+                htmlContentDiv.appendChild(iframe);
+                
+                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                iframeDoc.open();
+                iframeDoc.write(data.html.content);
+                iframeDoc.close();
+                
+                iframe.onload = () => {
+                    try {
+                        const height = iframeDoc.documentElement.scrollHeight;
+                        iframe.style.height = height + 'px';
+                    } catch (e) {
+                        console.log('Could not adjust iframe height');
+                    }
+                };
+            }
+
+            // Display metadata
+            if (data.metadata) {
+                const metadataDiv = document.querySelector('#metadata-content .output-content');
+                metadataDiv.innerHTML = `
+                    <strong>Title:</strong> ${data.metadata.title}\n\n
+                    <strong>Slug:</strong> ${data.metadata.slug}\n\n
+                    <strong>Description:</strong> ${data.metadata.description}\n\n
+                    <strong>Keywords:</strong> ${data.metadata.keywords.join(', ')}\n\n
+                    <strong>Word Count:</strong> ${data.metadata.wordCount}\n
+                    <strong>Reading Time:</strong> ${data.metadata.readingTime}\n\n
+                    <strong>Published Date:</strong> ${new Date(data.metadata.publishedDate).toLocaleString()}\n
+                    <strong>Generated At:</strong> ${new Date(data.generatedAt).toLocaleString()}
+                `;
+            }
+
+            // Display API JSON response
+            document.getElementById('api-output').textContent = 
+                JSON.stringify(data, null, 2);
+
+            // Mark all agents as completed
+            const agents = ['research', 'writer', 'editor', 'seo', 'publisher', 'html'];
+            agents.forEach(agent => {
+                updateAgentStatus(agent, 'completed', 'Completed via API');
+            });
+        }
+
+        // Socket event listeners
+        socket.on('connect', () => {
+            console.log('Connected to server');
+        });
+
+        socket.on('status-update', (data) => {
+            showStatus(data.message, 'info');
+        });
+
+        socket.on('agent-progress', (data) => {
+            const { agent, status, output, message } = data;
+            
+            if (message) {
+                showStatus(message, 'info');
+            }
+
+            if (agent) {
+                updateAgentStatus(agent, status, output);
+            }
+        });
+
+        socket.on('workflow-complete', (data) => {
+            workflowRunning = false;
+            startBtn.disabled = false;
+            showStatus('✅ Workflow completed successfully!', 'success');
+
+            console.log('Workflow complete data:', data); // Debug log
+            currentApiResponse = data;
+
+            // Display markdown content
+            if (data.markdown && data.markdown.formattedContent) {
+                document.querySelector('#markdown-content .output-content').textContent = 
+                    data.markdown.formattedContent;
+            }
+
+            // Display HTML content - try multiple possible data structures
+            const htmlContentDiv = document.querySelector('#html-content .output-content');
+            let htmlContent = null;
+            
+            if (data.html) {
+                // Try different possible properties
+                htmlContent = data.html.htmlContent || data.html.content || data.html.html;
+            }
+
+            if (htmlContent) {
+                // Create an iframe to safely render the HTML
+                const iframe = document.createElement('iframe');
+                iframe.style.width = '100%';
+                iframe.style.minHeight = '500px';
+                iframe.style.border = 'none';
+                iframe.style.borderRadius = '8px';
+                iframe.style.background = 'white';
+                
+                htmlContentDiv.innerHTML = '';
+                htmlContentDiv.appendChild(iframe);
+                
+                // Write the HTML content to the iframe
+                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                iframeDoc.open();
+                iframeDoc.write(htmlContent);
+                iframeDoc.close();
+                
+                // Adjust iframe height after content loads
+                iframe.onload = () => {
+                    try {
+                        const height = iframeDoc.documentElement.scrollHeight;
+                        iframe.style.height = height + 'px';
+                    } catch (e) {
+                        console.log('Could not adjust iframe height');
+                    }
+                };
+            } else {
+                htmlContentDiv.innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">No HTML content available. The HTML may have been saved to a file instead.</div>';
+            }
+
+            // Display metadata
+            if (data.markdown && data.markdown.metadata) {
+                const metadataDiv = document.querySelector('#metadata-content .output-content');
+                const metadata = data.markdown.metadata;
+                metadataDiv.innerHTML = `
+                    <strong>Title:</strong> ${metadata.title}\n\n
+                    <strong>Slug:</strong> ${metadata.slug}\n\n
+                    <strong>Description:</strong> ${metadata.metaDescription}\n\n
+                    <strong>Keywords:</strong> ${metadata.keywords.join(', ')}\n\n
+                    <strong>Word Count:</strong> ${metadata.wordCount}\n
+                    <strong>Reading Time:</strong> ${Math.ceil(metadata.wordCount / 200)} min\n\n
+                    <strong>Published Date:</strong> ${new Date(metadata.publishedDate).toLocaleString()}\n
+                    <strong>Status:</strong> ${metadata.status}
+                `;
+            }
+
+            // Display API-style JSON response
+            document.getElementById('api-output').textContent = 
+                JSON.stringify(data, null, 2);
+
+            // Add HTML file info if available
+            if (data.html && data.html.filePath) {
+                const htmlInfo = document.createElement('div');
+                htmlInfo.style.cssText = 'background: #e3f2fd; padding: 15px; border-radius: 8px; margin-bottom: 15px; color: #1976d2;';
+                htmlInfo.innerHTML = `
+                    <strong>📁 HTML File Location:</strong><br>
+                    ${data.html.filePath}<br>
+                    <small>File name: ${data.html.fileName || 'N/A'}</small>
+                `;
+                htmlContentDiv.insertBefore(htmlInfo, htmlContentDiv.firstChild);
+            }
+        });
+
+        socket.on('error', (data) => {
+            workflowRunning = false;
+            startBtn.disabled = false;
+            showStatus('❌ Error: ' + data.message, 'error');
+        });
+
+        // Allow Enter key to start workflow
+        topicInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !workflowRunning) {
+                startBtn.click();
+            }
+        });
+    </script>
+</body>
+</html>

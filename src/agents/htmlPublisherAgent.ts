@@ -144,6 +144,55 @@ Return ONLY the complete HTML content without any JSON or markdown formatting.`,
   }
 
   /**
+   * Publish HTML without saving to file (for API responses)
+   */
+  async publishWithoutSaving(
+    markdownContent: string,
+    metadata: ContentMetadata
+  ): Promise<HTMLPublisherOutput> {
+    console.log('\n📄 Converting markdown to HTML...');
+
+    const prompt = this.createPrompt();
+    const response = await prompt.pipe(this.llm).invoke({
+      content: markdownContent,  // Match the prompt variable name
+      title: metadata.title,
+      metaDescription: metadata.metaDescription,
+      keywords: metadata.keywords.join(', '),
+      author: metadata.author || 'Content Management System',
+      date: metadata.publishedDate,
+    });
+
+    let htmlContent = response.content as string;
+
+    // Clean up any markdown code block markers
+    htmlContent = htmlContent
+      .replace(/```html\n?/g, '')
+      .replace(/```\n?/g, '')
+      .trim();
+
+    // Ensure the HTML starts with DOCTYPE
+    if (!htmlContent.toLowerCase().includes('<!doctype')) {
+      htmlContent = '<!DOCTYPE html>\n' + htmlContent;
+    }
+
+    console.log('✅ HTML generated successfully (not saved to file)');
+    console.log(`📊 HTML size: ${(htmlContent.length / 1024).toFixed(2)} KB`);
+
+    return {
+      htmlContent,
+      filePath: '', // Empty since not saved
+      fileName: `${metadata.slug}.html`,
+      metadata: {
+        ...metadata,
+        format: 'html',
+        hasEmbeddedCSS: htmlContent.includes('<style>'),
+        isResponsive: htmlContent.toLowerCase().includes('viewport'),
+      },
+      status: 'published',
+    };
+  }
+
+  /**
    * Batch publish multiple markdown files to HTML
    */
   async publishBatch(

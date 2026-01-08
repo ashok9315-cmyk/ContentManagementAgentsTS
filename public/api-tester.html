@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Content API Tester</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .status {
+            padding: 12px;
+            border-radius: 8px;
+            margin: 15px 0;
+            display: none;
+        }
+
+        .status.info {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .status.success {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+
+        .status.error {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            border-radius: 0;
+            cursor: pointer;
+            font-weight: 600;
+            color: #666;
+            position: relative;
+        }
+
+        .tab.active {
+            color: #667eea;
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .output-box {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            max-height: 500px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .html-preview {
+            background: white;
+            border: 1px solid #e0e0e0;
+        }
+
+        .html-preview iframe {
+            width: 100%;
+            min-height: 500px;
+            border: none;
+        }
+
+        .metadata-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .metadata-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .metadata-item strong {
+            display: block;
+            color: #667eea;
+            margin-bottom: 5px;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+        }
+
+        .metadata-item span {
+            color: #333;
+            font-size: 1rem;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .copy-btn {
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            background: #4caf50;
+        }
+
+        .copy-btn:hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📡 Content Generation API Tester</h1>
+            <p>Test the /api/generate endpoint</p>
+        </div>
+
+        <div class="card">
+            <h2>Generate Content</h2>
+            <div class="input-group">
+                <label for="topic">Topic:</label>
+                <input 
+                    type="text" 
+                    id="topic" 
+                    placeholder="Enter your content topic (e.g., 'Artificial Intelligence')"
+                />
+            </div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="saveToFile">
+                <label for="saveToFile" style="margin: 0;">Save files to disk</label>
+            </div>
+
+            <button id="generateBtn" onclick="generateContent()">
+                Generate Content
+            </button>
+
+            <div id="status" class="status"></div>
+        </div>
+
+        <div class="card" id="resultsCard" style="display: none;">
+            <h2>Results</h2>
+            
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('json')">JSON Response</button>
+                <button class="tab" onclick="switchTab('markdown')">Markdown</button>
+                <button class="tab" onclick="switchTab('html')">HTML Preview</button>
+                <button class="tab" onclick="switchTab('metadata')">Metadata</button>
+            </div>
+
+            <div id="json-tab" class="tab-content active">
+                <button class="copy-btn" onclick="copyToClipboard('json-output')">📋 Copy JSON</button>
+                <div id="json-output" class="output-box"></div>
+            </div>
+
+            <div id="markdown-tab" class="tab-content">
+                <button class="copy-btn" onclick="copyToClipboard('markdown-output')">📋 Copy Markdown</button>
+                <div id="markdown-output" class="output-box"></div>
+            </div>
+
+            <div id="html-tab" class="tab-content">
+                <div id="html-output" class="html-preview"></div>
+            </div>
+
+            <div id="metadata-tab" class="tab-content">
+                <div id="metadata-output" class="metadata-grid"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentResponse = null;
+
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${type}`;
+            status.style.display = 'block';
+        }
+
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+        }
+
+        function copyToClipboard(elementId) {
+            const element = document.getElementById(elementId);
+            const text = element.textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                showStatus('✅ Copied to clipboard!', 'success');
+                setTimeout(() => {
+                    document.getElementById('status').style.display = 'none';
+                }, 2000);
+            });
+        }
+
+        async function generateContent() {
+            const topic = document.getElementById('topic').value.trim();
+            const saveToFile = document.getElementById('saveToFile').checked;
+            const btn = document.getElementById('generateBtn');
+
+            if (!topic) {
+                showStatus('❌ Please enter a topic', 'error');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> Generating...';
+            showStatus('🚀 Generating content...', 'info');
+            document.getElementById('resultsCard').style.display = 'none';
+
+            try {
+                const response = await fetch('http://localhost:3000/api/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        topic: topic,
+                        saveToFile: saveToFile
+                    })
+                });
+
+                const data = await response.json();
+                currentResponse = data;
+
+                if (data.success) {
+                    showStatus('✅ Content generated successfully!', 'success');
+                    displayResults(data);
+                } else {
+                    showStatus('❌ Error: ' + data.error, 'error');
+                }
+
+            } catch (error) {
+                showStatus('❌ Network error: ' + error.message, 'error');
+                console.error('Error:', error);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Generate Content';
+            }
+        }
+
+        function displayResults(data) {
+            document.getElementById('resultsCard').style.display = 'block';
+
+            // JSON output
+            document.getElementById('json-output').textContent = 
+                JSON.stringify(data, null, 2);
+
+            // Markdown output
+            document.getElementById('markdown-output').textContent = 
+                data.markdown.content;
+
+            // HTML preview
+            const htmlOutput = document.getElementById('html-output');
+            htmlOutput.innerHTML = '';
+            const iframe = document.createElement('iframe');
+            iframe.style.width = '100%';
+            iframe.style.minHeight = '500px';
+            iframe.style.border = 'none';
+            htmlOutput.appendChild(iframe);
+
+            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+            iframeDoc.open();
+            iframeDoc.write(data.html.content);
+            iframeDoc.close();
+
+            // Metadata
+            const metadataOutput = document.getElementById('metadata-output');
+            metadataOutput.innerHTML = `
+                <div class="metadata-item">
+                    <strong>Title</strong>
+                    <span>${data.metadata.title}</span>
+                </div>
+                <div class="metadata-item">
+                    <strong>Slug</strong>
+                    <span>${data.metadata.slug}</span>
+                </div>
+                <div class="metadata-item">
+                    <strong>Word Count</strong>
+                    <span>${data.metadata.wordCount}</span>
+                </div>
+                <div class="metadata-item">
+                    <strong>Reading Time</strong>
+                    <span>${data.metadata.readingTime}</span>
+                </div>
+                <div class="metadata-item">
+                    <strong>Published Date</strong>
+                    <span>${new Date(data.metadata.publishedDate).toLocaleString()}</span>
+                </div>
+                <div class="metadata-item">
+                    <strong>Generated At</strong>
+                    <span>${new Date(data.generatedAt).toLocaleString()}</span>
+                </div>
+                <div class="metadata-item" style="grid-column: 1 / -1;">
+                    <strong>Description</strong>
+                    <span>${data.metadata.description}</span>
+                </div>
+                <div class="metadata-item" style="grid-column: 1 / -1;">
+                    <strong>Keywords</strong>
+                    <span>${data.metadata.keywords.join(', ')}</span>
+                </div>
+            `;
+
+            // Scroll to results
+            document.getElementById('resultsCard').scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'start' 
+            });
+        }
+
+        // Allow Enter key
+        document.getElementById('topic').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                generateContent();
+            }
+        });
+    </script>
+</body>
+</html>

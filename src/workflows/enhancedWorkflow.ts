@@ -2,6 +2,7 @@
  * Enhanced Content Workflow with HTML Publishing
  */
 import 'dotenv/config';
+import { EventEmitter } from 'events';
 import { ResearchAgent } from '../agents/researchAgent.js';
 import { WriterAgent } from '../agents/writerAgent.js';
 import { EditorAgent } from '../agents/editorAgent.js';
@@ -9,6 +10,19 @@ import { SEOAgent } from '../agents/seoAgent.js';
 import { PublisherAgent } from '../agents/publisherAgent.js';
 import { HTMLPublisherAgent } from '../agents/htmlPublisherAgent.js';
 import type { PublisherOutput, HTMLPublisherOutput } from '../types/index.js';
+
+// Global event emitter for progress updates
+let globalEmitter: EventEmitter | null = null;
+
+export function setGlobalEmitter(emitter: EventEmitter) {
+  globalEmitter = emitter;
+}
+
+function emitProgress(agent: string, status: string, output?: string, message?: string) {
+  if (globalEmitter) {
+    globalEmitter.emit('agent-progress', { agent, status, output, message });
+  }
+}
 
 export class EnhancedContentWorkflow {
   private researchAgent: ResearchAgent;
@@ -29,12 +43,12 @@ export class EnhancedContentWorkflow {
 
   async run(
     topic: string,
-    options: { publishHTML?: boolean; outputDir?: string } = {}
+    options: { publishHTML?: boolean; outputDir?: string; saveFiles?: boolean } = {}
   ): Promise<{
     markdown: PublisherOutput;
     html?: HTMLPublisherOutput;
   }> {
-    const { publishHTML = true, outputDir = 'output' } = options;
+    const { publishHTML = true, outputDir = 'output', saveFiles = true } = options;
 
     console.log(`\n${'='.repeat(60)}`);
     console.log('🚀 STARTING ENHANCED CONTENT WORKFLOW');
@@ -43,22 +57,36 @@ export class EnhancedContentWorkflow {
     // Research Phase
     console.log('\n🔍 RESEARCH PHASE');
     console.log(`Topic: ${topic}`);
+    emitProgress('research', 'pending', undefined, '🔍 Starting research phase...');
+    emitProgress('research', 'active', 'Analyzing topic and gathering information...');
     const researchOutput = await this.researchAgent.run(topic);
+    emitProgress('research', 'completed', `Research completed: ${researchOutput.length} chars of data collected`);
 
     // Writing Phase
     console.log('\n✍️ WRITING PHASE');
+    emitProgress('writer', 'pending', undefined, '✍️ Starting writing phase...');
+    emitProgress('writer', 'active', 'Creating initial draft based on research...');
     const draftContent = await this.writerAgent.run(topic, researchOutput);
+    emitProgress('writer', 'completed', `Draft completed: ${draftContent.length} chars written`);
 
     // Editing Phase
     console.log('\n📝 EDITING PHASE');
+    emitProgress('editor', 'pending', undefined, '📝 Starting editing phase...');
+    emitProgress('editor', 'active', 'Reviewing and refining content...');
     const editedContent = await this.editorAgent.run(draftContent);
+    emitProgress('editor', 'completed', `Editing completed: Content refined and improved`);
 
     // SEO Optimization Phase
     console.log('\n🔎 SEO OPTIMIZATION PHASE');
+    emitProgress('seo', 'pending', undefined, '🔎 Starting SEO optimization...');
+    emitProgress('seo', 'active', 'Optimizing for search engines...');
     const seoResult = await this.seoAgent.optimize(editedContent, topic);
+    emitProgress('seo', 'completed', `SEO completed: ${seoResult.keywords.length} keywords, slug: ${seoResult.slug}`);
 
     // Publishing Phase (Markdown)
     console.log('\n📤 PUBLISHING PHASE - MARKDOWN');
+    emitProgress('publisher', 'pending', undefined, '📤 Publishing markdown...');
+    emitProgress('publisher', 'active', 'Formatting and preparing markdown...');
     const markdownOutput = await this.publisherAgent.publish(
       seoResult.optimizedContent,
       topic,
@@ -67,23 +95,43 @@ export class EnhancedContentWorkflow {
       seoResult.slug
     );
 
-    // Save markdown to file
-    console.log('\n💾 Saving markdown file...');
-    const publisher = new PublisherAgent();
-    const markdownFilename = publisher.saveToFile(markdownOutput);
-    console.log(`✅ Markdown saved to: ${markdownFilename}`);
+    // Save markdown to file (if enabled)
+    if (saveFiles) {
+      console.log('\n💾 Saving markdown file...');
+      const publisher = new PublisherAgent();
+      const markdownFilename = publisher.saveToFile(markdownOutput);
+      console.log(`✅ Markdown saved to: ${markdownFilename}`);
+      emitProgress('publisher', 'completed', `Markdown published: ${markdownFilename}`);
+    } else {
+      console.log('\n📄 Markdown generated (not saved to file)');
+      emitProgress('publisher', 'completed', `Markdown generated successfully`);
+    }
 
     let htmlOutput: HTMLPublisherOutput | undefined;
 
     // HTML Publishing Phase (if enabled)
     if (publishHTML) {
       console.log('\n🌐 PUBLISHING PHASE - HTML');
-      htmlOutput = await this.htmlPublisher.publish(
-        markdownOutput.formattedContent,
-        markdownOutput.metadata,
-        `${outputDir}/html`
-      );
-      console.log(`✅ HTML saved to: ${htmlOutput.filePath}`);
+      emitProgress('html', 'pending', undefined, '🌐 Publishing HTML...');
+      emitProgress('html', 'active', 'Converting to HTML and styling...');
+      
+      if (saveFiles) {
+        htmlOutput = await this.htmlPublisher.publish(
+          markdownOutput.formattedContent,
+          markdownOutput.metadata,
+          `${outputDir}/html`
+        );
+        console.log(`✅ HTML saved to: ${htmlOutput.filePath}`);
+        emitProgress('html', 'completed', `HTML published: ${htmlOutput.filePath}`);
+      } else {
+        // Generate HTML without saving to file
+        htmlOutput = await this.htmlPublisher.publishWithoutSaving(
+          markdownOutput.formattedContent,
+          markdownOutput.metadata
+        );
+        console.log('✅ HTML generated (not saved to file)');
+        emitProgress('html', 'completed', `HTML generated successfully`);
+      }
     }
 
     console.log(`\n${'='.repeat(60)}`);
