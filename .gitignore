@@ -97,8 +97,9 @@ cdk.context.json
 !samconfig.toml
 !template.yaml
 
-# Documentation - ignore all markdown files
+# Documentation - ignore all markdown files except README
 *.md
+!README.md
 
 # Downloaded/temporary files
 downloaded-*.html
