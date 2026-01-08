@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/index.js",
+    "start": "node dist/server.js",
     "dev": "tsx src/index.ts",
     "demo": "tsx src/index.ts --demo",
     "demo-html": "tsx src/demoHTMLPublisher.ts",
@@ -15,7 +15,8 @@
     "html": "tsx src/convertToHTML.ts",
     "clean": "rimraf dist",
     "server": "tsx src/server.ts",
-    "dev:ui": "tsx src/server.ts"
+    "dev:ui": "tsx src/server.ts",
+    "postinstall": "npm run build"
   },
   "keywords": [
     "langchain",

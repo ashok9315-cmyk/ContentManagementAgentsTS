@@ -78,3 +78,8 @@ $RECYCLE.BIN/
 # Misc
 .cache/
 .parcel-cache/
+
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml

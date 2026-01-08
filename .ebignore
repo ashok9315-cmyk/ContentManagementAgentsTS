@@ -1,0 +1,40 @@
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml
+
+# Git
+.git
+.gitignore
+
+# Development
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build (will be built on deployment)
+dist
+
+# Output files
+output
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+coverage
+.nyc_output
