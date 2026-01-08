@@ -17,7 +17,12 @@
     "clean": "rimraf dist",
     "server": "tsx src/server.ts",
     "dev:ui": "tsx src/server.ts",
-    "deploy:serverless": "sam build && sam deploy --guided"
+    "deploy:serverless": "sam build && sam deploy --guided",
+    "cdk": "cdk",
+    "cdk:deploy": "npm run build && cdk deploy",
+    "cdk:synth": "cdk synth",
+    "cdk:diff": "cdk diff",
+    "cdk:destroy": "cdk destroy"
   },
   "keywords": [
     "langchain",
@@ -34,6 +39,9 @@
     "@langchain/openai": "^0.2.0",
     "@types/aws-lambda": "^8.10.145",
     "dotenv": "^16.4.1",
+    "aws-cdk": "^2.168.0",
+    "aws-cdk-lib": "^2.168.0",
+    "constructs": "^10.3.0",
     "langchain": "^0.2.0",
     "zod": "^3.22.4"
   },
