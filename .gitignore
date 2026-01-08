@@ -97,17 +97,8 @@ cdk.context.json
 !samconfig.toml
 !template.yaml
 
-# Documentation (temporary/generated guides)
-*_GUIDE.md
-*_FIX.md
-*_SUMMARY.md
-*_COMPLETE.md
-*_SUCCESS.md
-*_DEPLOY.md
-*_REFERENCE.md
-*_LIMITATIONS.md
-DEPLOY_NOW.md
-QUICK_*.md
+# Documentation - ignore all markdown files
+*.md
 
 # Downloaded/temporary files
 downloaded-*.html
