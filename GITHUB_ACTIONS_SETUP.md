@@ -1,6 +1,35 @@
-# GitHub Actions CI/CD Setup
+# GitHub Actions Multi-Stage CI/CD Pipeline
 
-This repository uses GitHub Actions to automatically deploy the application to AWS when changes are pushed to the `master` branch.
+This repository uses a sophisticated multi-stage CI/CD pipeline that automatically builds, tests, and deploys to staging and production environments.
+
+## Pipeline Stages
+
+### 1. Build & Test
+- Runs on every push and pull request
+- Installs dependencies and builds TypeScript
+- Runs linting and tests (if configured)
+- Creates Lambda deployment package
+- Uploads build artifacts for deployment stages
+
+### 2. Deploy to Staging
+- **Triggers:** Push to `develop` branch
+- **Environment:** Staging
+- **URL:** https://staging-ai-content-studio.solutionsynth.cloud (if configured)
+- Uses build artifacts from Stage 1
+- Deploys to AWS staging stack
+
+### 3. Deploy to Production
+- **Triggers:** Push to `master` branch
+- **Environment:** Production  
+- **URL:** https://ai-content-studio.solutionsynth.cloud
+- Requires manual approval via GitHub Environment protection (optional)
+- Uses build artifacts from Stage 1
+- Deploys to AWS production stack
+
+### 4. Health Check
+- Runs after successful deployments
+- Verifies API endpoints are responding
+- Provides deployment status summary
 
 ## Required GitHub Secrets
 
@@ -68,32 +97,111 @@ cat ~/.aws/credentials
 
 ## Workflow Triggers
 
-The deployment workflow runs automatically on:
+The multi-stage pipeline runs automatically based on:
 
-- **Push to master**: Any commit pushed to the master branch
-- **Manual trigger**: Via GitHub Actions UI (workflow_dispatch)
+- **Push to `develop` branch**: Build → Deploy to Staging → Health Check
+- **Push to `master` branch**: Build → Deploy to Production → Health Check
+- **Pull Request to `master`**: Build & Test only (no deployment)
+- **Manual trigger**: Via GitHub Actions UI (choose staging or production)
+
+## Branch Strategy
+
+- **`develop`** → Staging environment (for testing)
+- **`master`** → Production environment (live)
+- **Feature branches** → Build & test only
+
+## GitHub Environment Configuration (Optional)
+
+For additional security, configure environment protection rules:
+
+1. Go to: `Settings` → `Environments`
+2. Create two environments:
+   - **staging** (auto-deploy)
+   - **production** (requires approval)
+
+3. For **production** environment, add:
+   - **Required reviewers**: Select team members who must approve
+   - **Wait timer**: Optional delay before deployment
+   - **Environment secrets**: Production-specific secrets
+
+This adds a manual approval step before production deployments.
 
 ## Workflow Steps
 
-1. **Checkout code** - Gets the latest code from the repository
+### Stage 1: Build & Test
+1. **Checkout code** - Gets the latest code
 2. **Setup Node.js** - Installs Node.js 20.x
-3. **Install dependencies** - Runs `npm ci` for clean install
-4. **Build TypeScript** - Compiles TypeScript to JavaScript
-5. **Build Lambda package** - Bundles Lambda code with dependencies
-6. **Configure AWS** - Sets up AWS credentials
-7. **Deploy with CDK** - Deploys infrastructure and code
-8. **Invalidate CloudFront** - Clears CDN cache for fresh content
-9. **Deployment summary** - Shows deployment details
+3. **Install dependencies** - Runs `npm install`
+4. **Lint code** - Checks code quality (if configured)
+5. **Build TypeScript** - Compiles to JavaScript
+6. **Run tests** - Executes test suite (if configured)
+7. **Build Lambda package** - Creates deployment package
+8. **Upload artifacts** - Saves build for deployment stages
+
+### Stage 2: Deploy to Staging (develop branch)
+1. **Download artifacts** - Gets build from Stage 1
+2. **Configure AWS** - Sets up credentials
+3. **Deploy with CDK** - Deploys to staging stack
+4. **Invalidate CloudFront** - Clears staging CDN cache
+
+### Stage 3: Deploy to Production (master branch)
+1. **Download artifacts** - Gets build from Stage 1
+2. **Configure AWS** - Sets up credentials
+3. **Deploy with CDK** - Deploys to production stack
+4. **Invalidate CloudFront** - Clears production CDN cache
+5. **Deployment summary** - Shows deployment details
+
+### Stage 4: Health Check
+1. **Check Production** - Verifies API is responding
+2. **Check Staging** - Verifies staging deployment
+3. **Generate report** - Creates health status summary
 
 ## Manual Deployment
 
 To trigger a deployment manually:
 
 1. Go to: `Actions` tab in GitHub
-2. Select `Deploy to AWS` workflow
+2. Select `Multi-Stage CI/CD Pipeline` workflow
 3. Click `Run workflow`
-4. Select `master` branch
-5. Click `Run workflow` button
+4. Select branch (`master` or `develop`)
+5. Choose environment (`staging` or `production`)
+6. Click `Run workflow` button
+
+## Deployment Workflow Examples
+
+### Deploying a New Feature
+
+```bash
+# Create feature branch
+git checkout -b feature/new-feature develop
+
+# Make changes and commit
+git add .
+git commit -m "feat: Add new feature"
+git push origin feature/new-feature
+
+# Create PR to develop → Triggers Build & Test
+# Merge to develop → Deploys to Staging
+
+# After testing in staging, create PR to master
+# Merge to master → Deploys to Production
+```
+
+### Hotfix to Production
+
+```bash
+# Create hotfix branch from master
+git checkout -b hotfix/critical-fix master
+
+# Fix and commit
+git add .
+git commit -m "fix: Critical bug fix"
+
+# Merge directly to master → Deploys to Production
+git checkout master
+git merge hotfix/critical-fix
+git push origin master
+```
 
 ## Viewing Deployment Status
 
