@@ -32,8 +32,8 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub 'ai-content-studio-${Environment}'
-      CodeUri: ./dist/lambda
-      Handler: workflow.handler
+      CodeUri: ./dist
+      Handler: lambda/workflow.handler
       Description: AI Content Generation Workflow with SSE
       Architectures:
         - x86_64
