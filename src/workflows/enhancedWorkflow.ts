@@ -1,7 +1,6 @@
 /**
  * Enhanced Content Workflow with HTML Publishing
  */
-import 'dotenv/config';
 import { EventEmitter } from 'events';
 import { ResearchAgent } from '../agents/researchAgent.js';
 import { WriterAgent } from '../agents/writerAgent.js';

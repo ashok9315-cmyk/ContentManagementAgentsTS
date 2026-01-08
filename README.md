@@ -2,6 +2,28 @@
 
 A sophisticated content management automation system using **LangChain.js** and **LangGraph.js** that generates both **Markdown** and **beautiful HTML** content.
 
+## 🚀 Quick Start - AWS Deployment
+
+**Deployed and Working!** Your Lambda function supports direct invocation to bypass API Gateway's 30-second timeout.
+
+```powershell
+# Direct Lambda invocation (no timeout!)
+$payload = '{"topic":"Your Topic Here"}'
+[System.IO.File]::WriteAllText("event.json", $payload, [System.Text.UTF8Encoding]::new($false))
+aws lambda invoke --function-name ai-content-studio-prod --invocation-type Event --payload file://event.json response.json
+```
+
+**Quick Links:**
+- 📖 [Direct Invocation Guide](DIRECT_INVOCATION_GUIDE.md) - Complete usage guide
+- ✅ [Deployment Success](DEPLOYMENT_SUCCESS.md) - Deployment summary
+- 🔧 [API Gateway Limitations](API_GATEWAY_LIMITATIONS.md) - Why use direct invocation
+
+**Deployed URLs:**
+- Health Check: https://4n97a4ocie.execute-api.us-east-1.amazonaws.com/prod/health
+- CloudFront: https://d3emcqgcw44t8f.cloudfront.net
+
+---
+
 ## ✨ Features
 
 - 🔍 **Research Agent**: Gathers comprehensive information on topics
