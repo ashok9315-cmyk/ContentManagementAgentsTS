@@ -154,6 +154,30 @@ jobs:
           name: build-artifacts
           path: .
 
+      - name: Verify artifacts
+        run: |
+          echo "Checking downloaded artifacts..."
+          ls -la
+          if [ -d "lambda-build" ]; then
+            echo "✓ lambda-build directory found"
+            ls -la lambda-build/
+          else
+            echo "✗ lambda-build directory not found!"
+            exit 1
+          fi
+
+      - name: Verify artifacts
+        run: |
+          echo "Checking downloaded artifacts..."
+          ls -la
+          if [ -d "lambda-build" ]; then
+            echo "✓ lambda-build directory found"
+            ls -la lambda-build/
+          else
+            echo "✗ lambda-build directory not found!"
+            exit 1
+          fi
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
