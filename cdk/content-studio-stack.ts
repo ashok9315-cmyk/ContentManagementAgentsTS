@@ -3,9 +3,18 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
+import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
+import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
 import * as logs from 'aws-cdk-lib/aws-logs';
+import * as acm from 'aws-cdk-lib/aws-certificatemanager';
+import * as route53 from 'aws-cdk-lib/aws-route53';
+import * as route53targets from 'aws-cdk-lib/aws-route53-targets';
 import { Construct } from 'constructs';
 import * as path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export interface ContentStudioStackProps extends cdk.StackProps {
   environment?: string;
@@ -33,9 +42,10 @@ export class ContentStudioStack extends cdk.Stack {
       functionName: `ai-content-studio-${environment}`,
       runtime: lambda.Runtime.NODEJS_20_X,
       handler: 'lambda/workflow.handler',
-      code: lambda.Code.fromAsset(path.join(__dirname, '../dist')),
-      timeout: cdk.Duration.minutes(5),
-      memorySize: 1024,
+      // Use lambda-build directory that includes node_modules
+      code: lambda.Code.fromAsset(path.join(__dirname, '../lambda-build')),
+      timeout: cdk.Duration.minutes(15), // Increased from 5 to 15 minutes
+      memorySize: 2048, // Increased from 1024MB to 2048MB for faster execution
       environment: {
         NODE_ENV: 'production',
         OPENAI_API_KEY: openAIApiKey,
@@ -43,7 +53,7 @@ export class ContentStudioStack extends cdk.Stack {
         TEMPERATURE: '0.7',
       },
       logRetention: logs.RetentionDays.ONE_WEEK,
-      description: 'AI Content Generation Workflow with SSE',
+      description: 'AI Content Generation Workflow - JSON Response',
     });
 
     // API Gateway
@@ -53,7 +63,15 @@ export class ContentStudioStack extends cdk.Stack {
       defaultCorsPreflightOptions: {
         allowOrigins: apigateway.Cors.ALL_ORIGINS,
         allowMethods: apigateway.Cors.ALL_METHODS,
-        allowHeaders: ['Content-Type', 'Authorization'],
+        allowHeaders: [
+          'Content-Type',
+          'Authorization',
+          'X-Requested-With',
+          'X-Amz-Date',
+          'X-Api-Key',
+          'X-Amz-Security-Token',
+        ],
+        allowCredentials: true,
       },
       deployOptions: {
         stageName: environment,
@@ -64,8 +82,10 @@ export class ContentStudioStack extends cdk.Stack {
       },
     });
 
-    // Lambda Integration
-    const lambdaIntegration = new apigateway.LambdaIntegration(workflowFunction);
+    // Lambda Integration (proxy mode handles CORS headers from Lambda response)
+    const lambdaIntegration = new apigateway.LambdaIntegration(workflowFunction, {
+      proxy: true,
+    });
 
     // API Routes
     const healthResource = api.root.addResource('health');
@@ -74,28 +94,123 @@ export class ContentStudioStack extends cdk.Stack {
     const apiResource = api.root.addResource('api');
     const workflowResource = apiResource.addResource('workflow');
     workflowResource.addMethod('POST', lambdaIntegration);
-    workflowResource.addMethod('OPTIONS', lambdaIntegration);
 
-    // S3 Bucket for Static Website
+    // Status check endpoint with path parameter
+    const statusResource = apiResource.addResource('status');
+    const statusJobResource = statusResource.addResource('{jobId}');
+    statusJobResource.addMethod('GET', lambdaIntegration);
+
+    // Add Gateway Responses for CORS on errors
+    // This ensures CORS headers are included even when API Gateway returns errors (504, 500, etc.)
+    const corsHeaders = {
+      'Access-Control-Allow-Origin': "'*'",
+      'Access-Control-Allow-Headers': "'Content-Type,Authorization,X-Requested-With,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'",
+      'Access-Control-Allow-Methods': "'GET,POST,OPTIONS,PUT,DELETE'",
+      'Access-Control-Allow-Credentials': "'true'",
+    };
+
+    // Add CORS headers to common error responses
+    api.addGatewayResponse('Default4XX', {
+      type: apigateway.ResponseType.DEFAULT_4XX,
+      responseHeaders: corsHeaders,
+    });
+
+    api.addGatewayResponse('Default5XX', {
+      type: apigateway.ResponseType.DEFAULT_5XX,
+      responseHeaders: corsHeaders,
+    });
+
+    api.addGatewayResponse('Timeout', {
+      type: apigateway.ResponseType.INTEGRATION_TIMEOUT,
+      responseHeaders: corsHeaders,
+    });
+
+    api.addGatewayResponse('Failure', {
+      type: apigateway.ResponseType.INTEGRATION_FAILURE,
+      responseHeaders: corsHeaders,
+    });
+
+    // S3 Bucket for Static Website (private, accessed via CloudFront)
     const websiteBucket = new s3.Bucket(this, 'WebsiteBucket', {
       bucketName: `ai-content-studio-${environment}-${this.account}`,
-      websiteIndexDocument: 'index-serverless.html',
-      websiteErrorDocument: 'error.html',
-      publicReadAccess: true,
-      blockPublicAccess: {
-        blockPublicAcls: false,
-        blockPublicPolicy: false,
-        ignorePublicAcls: false,
-        restrictPublicBuckets: false,
-      },
+      publicReadAccess: false, // CloudFront will access via OAI
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       removalPolicy: cdk.RemovalPolicy.DESTROY, // For dev/test only
       autoDeleteObjects: true, // For dev/test only
     });
+
+    // Grant Lambda read/write access to S3 for job results
+    websiteBucket.grantReadWrite(workflowFunction);
+
+    // Add S3 bucket name to Lambda environment
+    workflowFunction.addEnvironment('RESULTS_BUCKET', websiteBucket.bucketName);
 
     // Deploy static website files
     new s3deploy.BucketDeployment(this, 'DeployWebsite', {
       sources: [s3deploy.Source.asset(path.join(__dirname, '../public'))],
       destinationBucket: websiteBucket,
+    });
+
+    // CloudFront Origin Access Identity
+    const originAccessIdentity = new cloudfront.OriginAccessIdentity(this, 'OAI', {
+      comment: `OAI for AI Content Studio ${environment}`,
+    });
+
+    // Grant CloudFront access to S3
+    websiteBucket.grantRead(originAccessIdentity);
+
+    // Custom Domain Configuration
+    const domainName = 'ai-content-studio.solutionsynth.cloud';
+    const hostedZoneId = 'Z02373041SS8TKQHXZLAR';
+    const zoneName = 'solutionsynth.cloud';
+
+    // Look up existing hosted zone
+    const hostedZone = route53.HostedZone.fromHostedZoneAttributes(this, 'HostedZone', {
+      hostedZoneId: hostedZoneId,
+      zoneName: zoneName,
+    });
+
+    // Create SSL Certificate (must be in us-east-1 for CloudFront)
+    const certificate = new acm.Certificate(this, 'Certificate', {
+      domainName: domainName,
+      validation: acm.CertificateValidation.fromDns(hostedZone),
+    });
+
+    // CloudFront Distribution
+    const distribution = new cloudfront.Distribution(this, 'Distribution', {
+      domainNames: [domainName],
+      certificate: certificate,
+      defaultBehavior: {
+        origin: new origins.S3Origin(websiteBucket, {
+          originAccessIdentity,
+        }),
+        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
+        cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD_OPTIONS,
+        compress: true,
+      },
+      defaultRootObject: 'index-serverless.html',
+      errorResponses: [
+        {
+          httpStatus: 404,
+          responseHttpStatus: 200,
+          responsePagePath: '/index-serverless.html',
+          ttl: cdk.Duration.minutes(5),
+        },
+      ],
+      priceClass: cloudfront.PriceClass.PRICE_CLASS_100, // Use only North America & Europe
+      comment: `AI Content Studio ${environment} Distribution`,
+      enabled: true,
+    });
+
+    // Route 53 A Record pointing to CloudFront
+    new route53.ARecord(this, 'AliasRecord', {
+      zone: hostedZone,
+      recordName: domainName,
+      target: route53.RecordTarget.fromAlias(
+        new route53targets.CloudFrontTarget(distribution)
+      ),
+      comment: 'AI Content Studio CloudFront distribution',
     });
 
     // Outputs
@@ -106,9 +221,15 @@ export class ContentStudioStack extends cdk.Stack {
     });
 
     new cdk.CfnOutput(this, 'WebsiteURL', {
-      value: websiteBucket.bucketWebsiteUrl,
-      description: 'S3 Website URL',
+      value: `https://${domainName}`,
+      description: 'Custom Domain Website URL',
       exportName: `${this.stackName}-WebsiteURL`,
+    });
+
+    new cdk.CfnOutput(this, 'CloudFrontURL', {
+      value: `https://${distribution.distributionDomainName}`,
+      description: 'CloudFront Distribution URL (HTTPS)',
+      exportName: `${this.stackName}-CloudFrontURL`,
     });
 
     new cdk.CfnOutput(this, 'LambdaFunctionArn', {

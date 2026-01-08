@@ -4,8 +4,8 @@ Description: AI Content Studio - Serverless Architecture (Lambda + API Gateway +
 
 Globals:
   Function:
-    Timeout: 300  # 5 minutes for content generation
-    MemorySize: 1024
+    Timeout: 900  # 15 minutes maximum for Lambda (increased from 5 min)
+    MemorySize: 2048  # 2GB for better performance
     Runtime: nodejs20.x
     Environment:
       Variables:
@@ -67,15 +67,19 @@ Resources:
       Name: !Sub 'ai-content-studio-api-${Environment}'
       StageName: !Ref Environment
       Cors:
-        AllowMethods: "'GET,POST,OPTIONS'"
-        AllowHeaders: "'Content-Type,Authorization'"
+        AllowMethods: "'GET,POST,OPTIONS,PUT,DELETE'"
+        AllowHeaders: "'Content-Type,Authorization,X-Requested-With'"
         AllowOrigin: "'*'"
+        AllowCredentials: true
       TracingEnabled: true
       MethodSettings:
         - ResourcePath: '/*'
           HttpMethod: '*'
           ThrottlingBurstLimit: 100
           ThrottlingRateLimit: 50
+      # Increase API Gateway timeout to 29 seconds (max allowed)
+      EndpointConfiguration:
+        Type: REGIONAL
 
   # S3 Bucket for Static Website
   WebsiteBucket:

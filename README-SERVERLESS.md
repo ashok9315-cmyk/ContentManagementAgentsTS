@@ -1,12 +1,13 @@
-# Serverless Architecture Branch
+# Serverless Architecture
 
-This branch contains the **AWS Serverless** implementation using:
-- **AWS Lambda** for compute
-- **API Gateway** for REST API
-- **S3** for static website hosting
-- **Server-Sent Events (SSE)** for real-time updates
+This implementation uses **AWS CDK** to deploy serverless infrastructure:
+- **AWS Lambda** for compute (15-minute timeout, 2GB memory)
+- **API Gateway** for REST API with CORS
+- **S3** for static website storage
+- **CloudFront** for HTTPS content delivery
+- **Simple JSON responses** (SSE removed for API Gateway compatibility)
 
-## Cost: $1-5/month (vs $32-37/month for Elastic Beanstalk)
+## Cost: $3-5/month (vs $32-37/month for Elastic Beanstalk)
 
 ## Quick Start
 
@@ -14,26 +15,31 @@ This branch contains the **AWS Serverless** implementation using:
 # Install dependencies
 npm install
 
-# Build project
+# Set OpenAI API Key
+$env:OPENAI_API_KEY = "sk-your-key-here"
+
+# Bootstrap CDK (first time only)
+cdk bootstrap aws://ACCOUNT-ID/us-east-1
+
+# Build and deploy
 npm run build
+npm run cdk:deploy
 
-# Deploy with SAM
-sam build
-sam deploy --guided
-
-# Upload frontend to S3
-aws s3 sync public/ s3://your-bucket-name/
+# Get your URLs
+aws cloudformation describe-stacks --stack-name ContentStudioStack --query 'Stacks[0].Outputs'
 ```
 
-See [AWS_SERVERLESS_DEPLOYMENT.md](./AWS_SERVERLESS_DEPLOYMENT.md) for complete instructions.
+See [CDK_DEPLOYMENT_GUIDE.md](./CDK_DEPLOYMENT_GUIDE.md) for complete instructions.
 
-## Key Changes from Master Branch
+## Key Features
 
-1. **Removed Socket.IO** → Replaced with Server-Sent Events (SSE)
-2. **Added Lambda handler** → `src/lambda/workflow.ts`
-3. **New frontend** → `public/index-serverless.html` with SSE support
-4. **SAM template** → `template.yaml` for infrastructure as code
-5. **Cost optimized** → Pay only for what you use
+1. **Removed Socket.IO & SSE** → Simple JSON REST API
+2. **Lambda handler** → `src/lambda/workflow.ts`
+3. **Serverless frontend** → `public/index-serverless.html`
+4. **CDK Infrastructure** → `cdk/content-studio-stack.ts`
+5. **CORS fixed** → Full CORS support with all headers
+6. **Timeout fixed** → 15-minute Lambda timeout
+7. **Cost optimized** → Pay only for what you use
 
 ## Architecture
 
